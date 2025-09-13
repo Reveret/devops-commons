@@ -28,33 +28,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Determine Version
-        id: versioning
-        run: |
-          # Gradle Version auslesen
-          BASE_VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
-          BRANCH="${{ github.ref_name }}"
-
-          if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
-            VERSION="$BASE_VERSION"
-          else
-            SAFE_BRANCH=$(echo $BRANCH | tr '/' '-' | tr '[:upper:]' '[:lower:]')
-            VERSION="${BASE_VERSION}-SNAPSHOT.${SAFE_BRANCH}.${{ github.run_number }}"
-          fi
-
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "Version determined: $VERSION"
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ${{ inputs.registry }}/${{ inputs.app-name }}
-          flavor: latest=true
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern=${{ env.VERSION }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
